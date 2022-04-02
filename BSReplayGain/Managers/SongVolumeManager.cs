@@ -2,6 +2,8 @@
 using UnityEngine;
 using Zenject;
 using SiraUtil.Logging;
+using TagLib;
+using static System.Double;
 
 namespace BSReplayGain.Managers
 {
@@ -13,22 +15,26 @@ namespace BSReplayGain.Managers
 
         public SongVolumeManager(GameplayCoreSceneSetupData sceneSetupData, AudioTimeSyncController audioTimeSyncController, SiraLog log)
         {
-            this._sceneSetupData = sceneSetupData;
-            this._audioTimeSyncController = audioTimeSyncController;
-            this._log = log;
+            _sceneSetupData = sceneSetupData;
+            _audioTimeSyncController = audioTimeSyncController;
+            _log = log;
         }
 
         public void Initialize()
         {
-            _log.Info("In SongVolumeManager");
             var previewBeatmapLevel = _sceneSetupData.previewBeatmapLevel;
             if (!(previewBeatmapLevel is CustomPreviewBeatmapLevel customLevel)) return;
-            _log.Info("Level Path: " + customLevel.customLevelPath);
             var src = _audioTimeSyncController.GetComponent<AudioSource>();
-            _log.Info("Original Volume: " + src.volume);
-            src.volume = AudioHelpers.DBToNormalizedVolume(-1.2f);
-            _log.Info("Set volume to -1.2db, " + src.volume);
             
+            var tfile = TagLib.File.Create(customLevel.songPreviewAudioClipPath, "taglib/ogg", ReadStyle.Average);
+            var rg = tfile.Tag.ReplayGainTrackGain;
+            var peak = tfile.Tag.ReplayGainTrackPeak;
+
+            if (IsNaN(rg)) return;
+            var scale = Math.Pow(10, rg / 20);
+            scale = Math.Min(scale, 1 / peak); // Clipping prevention
+            _log.Info("Setting volume to: " + scale);
+            src.volume = (float)scale;
         }
     }
 }

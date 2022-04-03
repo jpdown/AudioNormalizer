@@ -1,4 +1,5 @@
-﻿using BSReplayGain.Managers;
+﻿using BSReplayGain.HarmonyPatches;
+using BSReplayGain.Managers;
 using Zenject;
 
 namespace BSReplayGain.Installers
@@ -8,6 +9,7 @@ namespace BSReplayGain.Installers
         public override void InstallBindings()
         {
             Container.BindInterfacesAndSelfTo<ReplayGainManager>().AsSingle();
+            Container.BindInterfacesTo<PerceivedLoudnessPatch>().AsSingle();
         }
     }
 }

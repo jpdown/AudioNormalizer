@@ -15,18 +15,17 @@ using Zenject;
 namespace BSReplayGain.Managers {
     public class ReplayGainManager : IInitializable {
         private Dictionary<string, RGScan> _results;
-
+        private List<string> _scanningLevels;
         private SiraLog _log;
         
         private static readonly string ScanResultsDir = $"{Environment.CurrentDirectory}/UserData/BSReplayGain/";
         private static readonly string ScanResultsPath = ScanResultsDir + "scans.json";
-        
         private readonly string _ffmpegPath = Path.Combine(UnityGame.LibraryPath, "ffmpeg.exe");
-        private readonly float _targetLUFS = -18f; // 89 dB, ReplayGain 2.0
 
         public ReplayGainManager(SiraLog log) {
             _log = log;
             _results = new Dictionary<string, RGScan>();
+            _scanningLevels = new List<string>();
         }
 
         public void Initialize() {
@@ -44,12 +43,17 @@ namespace BSReplayGain.Managers {
             }
         }
 
-        public RGScan? GetReplayGain(CustomPreviewBeatmapLevel level) {
-            var success = _results.TryGetValue(level.levelID, out var rg);
+        public RGScan? GetReplayGain(string levelId) {
+            var success = _results.TryGetValue(levelId, out var rg);
             return success ? rg : (RGScan?)null;
         }
 
-        public IEnumerator ScanSong(CustomPreviewBeatmapLevel level, AudioSource? source) {
+        public IEnumerator ScanSong(CustomPreviewBeatmapLevel level) {
+            if (_scanningLevels.Contains(level.levelID)) {
+                yield break;
+            }
+            _scanningLevels.Add(level.levelID);
+            
             var finished = false;
             string? peak = null, loudness = null;
             
@@ -92,22 +96,11 @@ namespace BSReplayGain.Managers {
             
             var parsedPeak = float.Parse(peak);
             var parsedLoudness = float.Parse(loudness);
-            var gain = _targetLUFS - parsedLoudness;
 
-            var rg = new RGScan(gain, parsedPeak);
+            var rg = new RGScan(parsedLoudness, parsedPeak);
             _setReplayGain(level.levelID, rg);
-            _log.Debug($"gain: {gain}, peak: {peak}");
-
-            if (source is { } aSource) {
-                SetVolume(rg, aSource);
-            }
-        }
-
-        public void SetVolume(RGScan rg, AudioSource source) {
-            var scale = Math.Pow(10, rg.Gain / 20);
-            scale = Math.Min(scale, 1 / rg.Peak); // Clipping prevention
-            _log.Info("Setting volume to: " + scale);
-            source.volume = (float)scale;
+            _log.Debug($"loudness: {loudness}, peak: {peak}");
+            _scanningLevels.Remove(level.levelID);
         }
 
         private void _setReplayGain(string levelId, RGScan rg) {

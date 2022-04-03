@@ -51,6 +51,10 @@
       <Private>False</Private>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
+    <Reference Include="SongCore">
+      <HintPath>$(BeatSaberDir)\Plugins\SongCore.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -116,10 +120,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HarmonyPatches\PerceivedLoudnessPatch.cs" />
     <Compile Include="Installers\ReplayGainCoreInstaller.cs" />
-    <Compile Include="Installers\ReplayGainGameInstaller.cs" />
     <Compile Include="Managers\ReplayGainManager.cs" />
-    <Compile Include="Managers\SongVolumeManager.cs" />
     <Compile Include="Models\RGScan.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Configuration\PluginConfig.cs" />

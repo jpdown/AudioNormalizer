@@ -2,13 +2,13 @@
 
 namespace BSReplayGain.Models {
     public struct RGScan {
-        [JsonProperty("gain")]
-        public readonly float Gain { get; }
+        [JsonProperty("loudness")]
+        public readonly float Loudness { get; }
         [JsonProperty("peak")]
         public readonly float Peak { get; }
         
-        public RGScan(float gain, float peak) {
-            Gain = gain;
+        public RGScan(float loudness, float peak) {
+            Loudness = loudness;
             Peak = peak;
         }
     }

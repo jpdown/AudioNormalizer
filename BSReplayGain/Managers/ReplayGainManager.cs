@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using BSReplayGain.Models;
 using IPA.Utilities;
 using Newtonsoft.Json;
@@ -48,13 +49,12 @@ namespace BSReplayGain.Managers {
             return success ? rg : (RGScan?)null;
         }
 
-        public IEnumerator ScanSong(CustomPreviewBeatmapLevel level) {
+        public async Task<RGScan?> ScanSong(CustomPreviewBeatmapLevel level) {
             if (_scanningLevels.Contains(level.levelID)) {
-                yield break;
+                return null;
             }
             _scanningLevels.Add(level.levelID);
             
-            var finished = false;
             string? peak = null, loudness = null;
             
             var scanProcess = new Process();
@@ -62,7 +62,6 @@ namespace BSReplayGain.Managers {
             scanProcess.StartInfo.CreateNoWindow = true;
             scanProcess.StartInfo.FileName = _ffmpegPath;
             scanProcess.StartInfo.RedirectStandardError = true; // ffmpeg outputs to stderr
-            scanProcess.EnableRaisingEvents = true;
             scanProcess.StartInfo.Arguments =
                 $"-nostats -hide_banner -i \"{level.songPreviewAudioClipPath}\" -map a:0 -filter replaygain,ebur128 -f null -";
 
@@ -79,18 +78,18 @@ namespace BSReplayGain.Managers {
                     _log.Info("loudness " + loudness);
                 }
             };
-            
-            scanProcess.Exited += (obj, args) => finished = true;
+
             _log.Debug("About To Start Scan");
 
             scanProcess.Start();
             scanProcess.BeginErrorReadLine();
             
             _log.Info("Started Scan");
-            yield return new WaitUntil(() => finished);
 
+            await Task.Run(() => scanProcess.WaitForExit());
+            
             if (peak == null || loudness == null) {
-                yield break;
+                return null;
             }
             _log.Debug("After null check");
             
@@ -101,6 +100,8 @@ namespace BSReplayGain.Managers {
             _setReplayGain(level.levelID, rg);
             _log.Debug($"loudness: {loudness}, peak: {peak}");
             _scanningLevels.Remove(level.levelID);
+
+            return rg;
         }
 
         private void _setReplayGain(string levelId, RGScan rg) {

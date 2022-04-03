@@ -1,5 +1,4 @@
 ﻿using BSReplayGain.Managers;
-using BSReplayGain.Models;
 using SiraUtil.Affinity;
 using SiraUtil.Logging;
 
@@ -28,7 +27,7 @@ namespace BSReplayGain.HarmonyPatches {
             // Start scan for next time this song is encountered
             var level = SongCore.Loader.GetLevelById(levelId);
             if (level is CustomPreviewBeatmapLevel customLevel) {
-                SharedCoroutineStarter.instance.StartCoroutine(_rgManager.ScanSong(customLevel));
+                _rgManager.ScanSong(customLevel);
             }
         }
     }

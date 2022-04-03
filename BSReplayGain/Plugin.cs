@@ -14,6 +14,7 @@ namespace BSReplayGain
         {
             zenjector.UseLogger(logger);
             zenjector.Install<ReplayGainCoreInstaller>(Location.App);
+            zenjector.Install<ReplayGainMenuInstaller>(Location.Menu);
         }
     }
 }

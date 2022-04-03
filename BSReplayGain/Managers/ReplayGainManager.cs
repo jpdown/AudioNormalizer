@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -10,14 +9,13 @@ using BSReplayGain.Models;
 using IPA.Utilities;
 using Newtonsoft.Json;
 using SiraUtil.Logging;
-using UnityEngine;
 using Zenject;
 
 namespace BSReplayGain.Managers {
     public class ReplayGainManager : IInitializable {
         private Dictionary<string, RGScan> _results;
-        private List<string> _scanningLevels;
-        private SiraLog _log;
+        private readonly Dictionary<string, Task<RGScan?>> _scanningLevels;
+        private readonly SiraLog _log;
         
         private static readonly string ScanResultsDir = $"{Environment.CurrentDirectory}/UserData/BSReplayGain/";
         private static readonly string ScanResultsPath = ScanResultsDir + "scans.json";
@@ -26,7 +24,7 @@ namespace BSReplayGain.Managers {
         public ReplayGainManager(SiraLog log) {
             _log = log;
             _results = new Dictionary<string, RGScan>();
-            _scanningLevels = new List<string>();
+            _scanningLevels = new Dictionary<string, Task<RGScan?>>();
         }
 
         public void Initialize() {
@@ -49,12 +47,27 @@ namespace BSReplayGain.Managers {
             return success ? rg : (RGScan?)null;
         }
 
-        public async Task<RGScan?> ScanSong(CustomPreviewBeatmapLevel level) {
-            if (_scanningLevels.Contains(level.levelID)) {
-                return null;
+        public void QueueScanSong(CustomPreviewBeatmapLevel level) {
+            _scanningLevels.TryGetValue(level.levelID, out var scan);
+            if (scan is { }) {
+                return;
             }
-            _scanningLevels.Add(level.levelID);
             
+            _scanningLevels.Add(level.levelID, _internalScanSong(level));
+        }
+
+        public async Task<RGScan?> ScanSong(CustomPreviewBeatmapLevel level) {
+            _scanningLevels.TryGetValue(level.levelID, out var scan);
+            if (scan is { } currentScan) {
+                return await currentScan;
+            }
+
+            scan = _internalScanSong(level);
+            _scanningLevels.Add(level.levelID, scan);
+            return await scan;
+        }
+
+        private async Task<RGScan?> _internalScanSong(CustomPreviewBeatmapLevel level) {
             string? peak = null, loudness = null;
             
             var scanProcess = new Process();

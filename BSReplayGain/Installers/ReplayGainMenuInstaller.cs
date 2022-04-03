@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using BSReplayGain.HarmonyPatches;
-using BSReplayGain.Managers;
 using Zenject;
 
 namespace BSReplayGain.Installers

@@ -27,7 +27,7 @@ namespace BSReplayGain.HarmonyPatches {
             // Start scan for next time this song is encountered
             var level = SongCore.Loader.GetLevelById(levelId);
             if (level is CustomPreviewBeatmapLevel customLevel) {
-                _rgManager.ScanSong(customLevel);
+                _rgManager.QueueScanSong(customLevel);
             }
         }
     }

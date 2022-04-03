@@ -41,5 +41,5 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v1
       with:
-        name: MultiplayerExtensions
+        name: BSReplayGain
         path: ${{ steps.Build.outputs.artifactpath }}

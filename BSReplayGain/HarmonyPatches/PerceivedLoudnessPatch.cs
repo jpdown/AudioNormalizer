@@ -22,6 +22,7 @@ namespace BSReplayGain.HarmonyPatches {
             if ((replayGain is { } rg)) {
                 _log.Debug($"Has ReplayGain, returning {rg.Loudness} for {levelId}");
                 __result = rg.Loudness;
+                return;
             }
             _log.Debug($"No ReplayGain, falling back to default for {levelId}");
             // Start scan for next time this song is encountered

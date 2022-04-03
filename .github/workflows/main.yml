@@ -23,9 +23,9 @@ jobs:
     - name: ExtractRefs
       run: unzip -q -n bsfiles.zip -d ./Refs
     - name: Download Mod Dependencies
-      uses: Goobwabber/download-beatmods-deps@1.1
+      uses: Goobwabber/download-beatmods-deps@1.2
       with:
-        manifest: ./BSReplayGain/manifest.json
+        manifest: ${{github.workspace}}/BSReplayGain/manifest.json
     - name: Build
       id: Build
       env: 

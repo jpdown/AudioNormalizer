@@ -1,9 +1,8 @@
 ﻿using System;
+using BSReplayGain.Models;
 using UnityEngine;
 using Zenject;
 using SiraUtil.Logging;
-using TagLib;
-using static System.Double;
 
 namespace BSReplayGain.Managers
 {
@@ -12,27 +11,38 @@ namespace BSReplayGain.Managers
         private readonly GameplayCoreSceneSetupData _sceneSetupData;
         private readonly AudioTimeSyncController _audioTimeSyncController;
         private readonly SiraLog _log;
+        private readonly ReplayGainManager _replayGainManager;
 
-        public SongVolumeManager(GameplayCoreSceneSetupData sceneSetupData, AudioTimeSyncController audioTimeSyncController, SiraLog log)
+        public SongVolumeManager(
+            GameplayCoreSceneSetupData sceneSetupData, 
+            AudioTimeSyncController audioTimeSyncController, 
+            SiraLog log,
+            ReplayGainManager replayGainManager
+            )
         {
             _sceneSetupData = sceneSetupData;
             _audioTimeSyncController = audioTimeSyncController;
             _log = log;
+            _replayGainManager = replayGainManager;
         }
 
         public void Initialize()
         {
             var previewBeatmapLevel = _sceneSetupData.previewBeatmapLevel;
-            if (!(previewBeatmapLevel is CustomPreviewBeatmapLevel customLevel)) return;
+            if (previewBeatmapLevel is not CustomPreviewBeatmapLevel customLevel) return;
             var src = _audioTimeSyncController.GetComponent<AudioSource>();
             
-            var tfile = TagLib.File.Create(customLevel.songPreviewAudioClipPath, "taglib/ogg", ReadStyle.Average);
-            var rg = tfile.Tag.ReplayGainTrackGain;
-            var peak = tfile.Tag.ReplayGainTrackPeak;
+            var replayGain = _replayGainManager.GetReplayGain(customLevel);
+            _log.Info(replayGain == null);
+            if (replayGain is not { } rg) {
+                _log.Info("Starting Coroutine");
+                SharedCoroutineStarter.instance.StartCoroutine(_replayGainManager.ScanSong(customLevel));
+                return;
+            }
+            _log.Info($"Using gain {rg.Gain} peak {rg.Peak}");
 
-            if (IsNaN(rg)) return;
-            var scale = Math.Pow(10, rg / 20);
-            scale = Math.Min(scale, 1 / peak); // Clipping prevention
+            var scale = Math.Pow(10, rg.Gain / 20);
+            scale = Math.Min(scale, 1 / rg.Peak); // Clipping prevention
             _log.Info("Setting volume to: " + scale);
             src.volume = (float)scale;
         }

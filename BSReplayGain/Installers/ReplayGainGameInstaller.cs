@@ -3,7 +3,7 @@ using Zenject;
 
 namespace BSReplayGain.Installers
 {
-    internal class SongVolumeInstaller : Installer
+    internal class ReplayGainGameInstaller : Installer
     {
         public override void InstallBindings()
         {

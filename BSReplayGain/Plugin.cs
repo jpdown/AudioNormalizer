@@ -13,7 +13,8 @@ namespace BSReplayGain
         public Plugin(IPALogger logger, Zenjector zenjector)
         {
             zenjector.UseLogger(logger);
-            zenjector.Install<SongVolumeInstaller>(Location.Player);
+            zenjector.Install<ReplayGainCoreInstaller>(Location.App);
+            zenjector.Install<ReplayGainGameInstaller>(Location.Player);
         }
     }
 }

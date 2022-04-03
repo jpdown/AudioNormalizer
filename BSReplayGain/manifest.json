@@ -1,12 +1,14 @@
 ﻿{
   "$schema": "https://raw.githubusercontent.com/bsmg/BSIPA-MetadataFileSchema/master/Schema.json",
-  "id": "ReplayGain",
-  "name": "ReplayGain",
+  "id": "BSReplayGain",
+  "name": "BSReplayGain",
   "author": "jpdown",
   "version": "0.0.1",
   "description": "Adds ReplayGain support to custom levels",
   "gameVersion": "1.21.0",
   "dependsOn": {
-    "BSIPA": "^4.2.0"
+    "BSIPA": "^4.2.0",
+    "SiraUtil": "^3.0.0",
+    "ffmpeg": "^4.3.0"
   }
 }

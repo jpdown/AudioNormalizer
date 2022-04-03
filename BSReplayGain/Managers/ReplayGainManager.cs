@@ -9,6 +9,7 @@ using BSReplayGain.Models;
 using IPA.Utilities;
 using Newtonsoft.Json;
 using SiraUtil.Logging;
+using UnityEngine;
 using Zenject;
 
 namespace BSReplayGain.Managers {
@@ -48,52 +49,65 @@ namespace BSReplayGain.Managers {
             return success ? rg : (RGScan?)null;
         }
 
-        public IEnumerator ScanSong(CustomPreviewBeatmapLevel level) {
-            _log.Info("In Scan");
+        public IEnumerator ScanSong(CustomPreviewBeatmapLevel level, AudioSource? source) {
             var finished = false;
+            string? peak = null, loudness = null;
+            
             var scanProcess = new Process();
             scanProcess.StartInfo.UseShellExecute = false;
+            scanProcess.StartInfo.CreateNoWindow = true;
             scanProcess.StartInfo.FileName = _ffmpegPath;
-            scanProcess.StartInfo.RedirectStandardOutput = true;
-            scanProcess.StartInfo.RedirectStandardError = true;
+            scanProcess.StartInfo.RedirectStandardError = true; // ffmpeg outputs to stderr
+            scanProcess.EnableRaisingEvents = true;
             scanProcess.StartInfo.Arguments =
                 $"-nostats -hide_banner -i \"{level.songPreviewAudioClipPath}\" -map a:0 -filter replaygain,ebur128 -f null -";
 
-            scanProcess.Exited += (obj, args) => finished = true;
-            scanProcess.Start();
-            _log.Info("Started Scan");
-            scanProcess.WaitForExit(); // TODO Make this yield instead
-            _log.Info("Parsing");
+            scanProcess.ErrorDataReceived += (s, e) => {
+                if (e.Data.StartsWith("[Parsed_replaygain_0" ) && e.Data.Contains("track_peak")) {
+                    _log.Info(e.Data);
+                    peak = e.Data.Split().Last();
+                    _log.Info("peak " + peak);
+                }
+                else if (e.Data.StartsWith("    I:")) {
+                    _log.Info(e.Data);
+                    var split = e.Data.Split();
+                    loudness = split[split.Length - 2]; // Second last entry
+                    _log.Info("loudness " + loudness);
+                }
+            };
             
-            // Parse peak and gain from output
-            _log.Debug(scanProcess.StandardError.ReadToEnd());
-            var reader = scanProcess.StandardOutput;
-            string? peak = null, loudness = null;
-            while (reader.ReadLine() is { } line) {
-                _log.Debug(line);
-                if (line.Contains("track_peak")) {
-                    _log.Debug(line);
-                    peak = line.Split().Last();
-                    _log.Debug("peak " + peak);
-                }
-                else if (line.StartsWith("    I:")) {
-                    _log.Debug(line);
-                    loudness = line.Split()[line.Length - 2]; // Second last entry
-                    _log.Debug("loudness " + loudness);
-                    break;
-                }
-            }
+            scanProcess.Exited += (obj, args) => finished = true;
+            _log.Debug("About To Start Scan");
+
+            scanProcess.Start();
+            scanProcess.BeginErrorReadLine();
+            
+            _log.Info("Started Scan");
+            yield return new WaitUntil(() => finished);
 
             if (peak == null || loudness == null) {
                 yield break;
             }
+            _log.Debug("After null check");
             
             var parsedPeak = float.Parse(peak);
             var parsedLoudness = float.Parse(loudness);
             var gain = _targetLUFS - parsedLoudness;
-            
-            _setReplayGain(level.levelID, new RGScan(gain, parsedPeak));
+
+            var rg = new RGScan(gain, parsedPeak);
+            _setReplayGain(level.levelID, rg);
             _log.Debug($"gain: {gain}, peak: {peak}");
+
+            if (source is { } aSource) {
+                SetVolume(rg, aSource);
+            }
+        }
+
+        public void SetVolume(RGScan rg, AudioSource source) {
+            var scale = Math.Pow(10, rg.Gain / 20);
+            scale = Math.Min(scale, 1 / rg.Peak); // Clipping prevention
+            _log.Info("Setting volume to: " + scale);
+            source.volume = (float)scale;
         }
 
         private void _setReplayGain(string levelId, RGScan rg) {

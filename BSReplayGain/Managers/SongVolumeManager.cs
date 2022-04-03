@@ -30,21 +30,17 @@ namespace BSReplayGain.Managers
         {
             var previewBeatmapLevel = _sceneSetupData.previewBeatmapLevel;
             if (!(previewBeatmapLevel is CustomPreviewBeatmapLevel customLevel)) return;
-            var src = _audioTimeSyncController.GetComponent<AudioSource>();
+            var source = _audioTimeSyncController.GetComponent<AudioSource>();
             
             var replayGain = _replayGainManager.GetReplayGain(customLevel);
-            _log.Info(replayGain == null);
             if (!(replayGain is { } rg)) {
-                _log.Info("Starting Coroutine");
-                SharedCoroutineStarter.instance.StartCoroutine(_replayGainManager.ScanSong(customLevel));
+                _log.Debug("Starting Coroutine");
+                SharedCoroutineStarter.instance.StartCoroutine(_replayGainManager.ScanSong(customLevel, source));
                 return;
             }
-            _log.Info($"Using gain {rg.Gain} peak {rg.Peak}");
 
-            var scale = Math.Pow(10, rg.Gain / 20);
-            scale = Math.Min(scale, 1 / rg.Peak); // Clipping prevention
-            _log.Info("Setting volume to: " + scale);
-            src.volume = (float)scale;
+            _log.Debug($"Using gain {rg.Gain} peak {rg.Peak}");
+            _replayGainManager.SetVolume(rg, source);
         }
     }
 }

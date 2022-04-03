@@ -29,12 +29,12 @@ namespace BSReplayGain.Managers
         public void Initialize()
         {
             var previewBeatmapLevel = _sceneSetupData.previewBeatmapLevel;
-            if (previewBeatmapLevel is not CustomPreviewBeatmapLevel customLevel) return;
+            if (!(previewBeatmapLevel is CustomPreviewBeatmapLevel customLevel)) return;
             var src = _audioTimeSyncController.GetComponent<AudioSource>();
             
             var replayGain = _replayGainManager.GetReplayGain(customLevel);
             _log.Info(replayGain == null);
-            if (replayGain is not { } rg) {
+            if (!(replayGain is { } rg)) {
                 _log.Info("Starting Coroutine");
                 SharedCoroutineStarter.instance.StartCoroutine(_replayGainManager.ScanSong(customLevel));
                 return;

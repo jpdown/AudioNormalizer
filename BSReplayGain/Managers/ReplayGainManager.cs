@@ -9,7 +9,6 @@ using BSReplayGain.Models;
 using IPA.Utilities;
 using Newtonsoft.Json;
 using SiraUtil.Logging;
-using UnityEngine;
 using Zenject;
 
 namespace BSReplayGain.Managers {
@@ -46,7 +45,7 @@ namespace BSReplayGain.Managers {
 
         public RGScan? GetReplayGain(CustomPreviewBeatmapLevel level) {
             var success = _results.TryGetValue(level.levelID, out var rg);
-            return success ? rg : null;
+            return success ? rg : (RGScan?)null;
         }
 
         public IEnumerator ScanSong(CustomPreviewBeatmapLevel level) {

@@ -15,7 +15,7 @@ jobs:
     - name: Setup dotnet
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 3.1.101
+        dotnet-version: 5.0.x
     - name: GetStrippedRefs
       env:
         FILES_URL: ${{ secrets.BSFILES_URL }}
@@ -28,8 +28,6 @@ jobs:
         manifest: ${{github.workspace}}/BSReplayGain/manifest.json
     - name: Build
       id: Build
-      env: 
-        FrameworkPathOverride: /usr/lib/mono/4.8-api
       run: dotnet build --configuration Release
     - name: GitStatus
       run: git status
@@ -41,5 +39,5 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v1
       with:
-        name: BSReplayGain
+        name: ${{ steps.Build.outputs.filename }}
         path: ${{ steps.Build.outputs.artifactpath }}

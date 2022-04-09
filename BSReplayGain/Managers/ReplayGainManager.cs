@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BSReplayGain.Models;
 using IPA.Utilities;
 using Newtonsoft.Json;
 using SiraUtil.Logging;
@@ -13,8 +11,8 @@ using Zenject;
 
 namespace BSReplayGain.Managers {
     public class ReplayGainManager : IInitializable {
-        private Dictionary<string, RGScan> _results;
-        private readonly Dictionary<string, Task<RGScan?>> _scanningLevels;
+        private Dictionary<string, float> _results;
+        private readonly Dictionary<string, Task<float?>> _scanningLevels;
         private readonly SiraLog _log;
         
         private static readonly string ScanResultsDir = $"{Environment.CurrentDirectory}/UserData/BSReplayGain/";
@@ -23,8 +21,8 @@ namespace BSReplayGain.Managers {
 
         public ReplayGainManager(SiraLog log) {
             _log = log;
-            _results = new Dictionary<string, RGScan>();
-            _scanningLevels = new Dictionary<string, Task<RGScan?>>();
+            _results = new Dictionary<string, float>();
+            _scanningLevels = new Dictionary<string, Task<float?>>();
         }
 
         public void Initialize() {
@@ -37,14 +35,14 @@ namespace BSReplayGain.Managers {
             }
             else
             {
-                _results = JsonConvert.DeserializeObject<Dictionary<string, RGScan>>
+                _results = JsonConvert.DeserializeObject<Dictionary<string, float>>
                     (File.ReadAllText(ScanResultsPath, Encoding.UTF8)) ?? _results;
             }
         }
 
-        public RGScan? GetReplayGain(string levelId) {
+        public float? GetReplayGain(string levelId) {
             var success = _results.TryGetValue(levelId, out var rg);
-            return success ? rg : (RGScan?)null;
+            return success ? rg : (float?)null;
         }
 
         public void QueueScanSong(CustomPreviewBeatmapLevel level) {
@@ -56,7 +54,7 @@ namespace BSReplayGain.Managers {
             _scanningLevels.Add(level.levelID, _internalScanSong(level));
         }
 
-        public async Task<RGScan?> ScanSong(CustomPreviewBeatmapLevel level) {
+        public async Task<float?> ScanSong(CustomPreviewBeatmapLevel level) {
             _scanningLevels.TryGetValue(level.levelID, out var scan);
             if (scan is { } currentScan) {
                 return await currentScan;
@@ -67,8 +65,8 @@ namespace BSReplayGain.Managers {
             return await scan;
         }
 
-        private async Task<RGScan?> _internalScanSong(CustomPreviewBeatmapLevel level) {
-            string? peak = null, loudness = null;
+        private async Task<float?> _internalScanSong(CustomPreviewBeatmapLevel level) {
+            string? loudness = null;
             
             var scanProcess = new Process();
             scanProcess.StartInfo.UseShellExecute = false;
@@ -76,48 +74,37 @@ namespace BSReplayGain.Managers {
             scanProcess.StartInfo.FileName = _ffmpegPath;
             scanProcess.StartInfo.RedirectStandardError = true; // ffmpeg outputs to stderr
             scanProcess.StartInfo.Arguments =
-                $"-nostats -hide_banner -i \"{level.songPreviewAudioClipPath}\" -map a:0 -filter replaygain,ebur128 -f null -";
+                $"-nostats -hide_banner -i \"{level.songPreviewAudioClipPath}\" -map a:0 -filter ebur128=framelog=verbose -f null -";
 
             scanProcess.ErrorDataReceived += (s, e) => {
-                if (e.Data.StartsWith("[Parsed_replaygain_0" ) && e.Data.Contains("track_peak")) {
-                    _log.Info(e.Data);
-                    peak = e.Data.Split().Last();
-                    _log.Info("peak " + peak);
-                }
-                else if (e.Data.StartsWith("    I:")) {
-                    _log.Info(e.Data);
-                    var split = e.Data.Split();
-                    loudness = split[split.Length - 2]; // Second last entry
-                    _log.Info("loudness " + loudness);
-                }
+                if (!e.Data.StartsWith("    I:")) return;
+                var split = e.Data.Split();
+                loudness = split[split.Length - 2]; // Second last entry
             };
 
-            _log.Debug("About To Start Scan");
+            _log.Debug($"About to start scan for song {level.levelID}");
 
             scanProcess.Start();
             scanProcess.BeginErrorReadLine();
             
-            _log.Info("Started Scan");
 
             await Task.Run(() => scanProcess.WaitForExit());
             
-            if (peak == null || loudness == null) {
+            if (loudness == null) {
                 return null;
             }
-            _log.Debug("After null check");
             
-            var parsedPeak = float.Parse(peak);
             var parsedLoudness = float.Parse(loudness);
 
-            var rg = new RGScan(parsedLoudness, parsedPeak);
-            _setReplayGain(level.levelID, rg);
-            _log.Debug($"loudness: {loudness}, peak: {peak}");
+            _setReplayGain(level.levelID, parsedLoudness);
             _scanningLevels.Remove(level.levelID);
 
-            return rg;
+            _log.Debug($"Finished scan, {level.levelID} - {parsedLoudness}");
+
+            return parsedLoudness;
         }
 
-        private void _setReplayGain(string levelId, RGScan rg) {
+        private void _setReplayGain(string levelId, float rg) {
             if (_results.ContainsKey(levelId)) {
                 _results.Remove(levelId);
             }

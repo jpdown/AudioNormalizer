@@ -16,11 +16,10 @@ namespace BSReplayGain.HarmonyPatches {
         [AffinityPatch(typeof(PerceivedLoudnessPerLevelModel),
             nameof(PerceivedLoudnessPerLevelModel.GetLoudnessByLevelId))]
         internal void Postfix(string levelId, ref float __result) {
-            // TODO use peak value for clipping prevention
             var replayGain = _rgManager.GetReplayGain(levelId);
-            if ((replayGain is { } rg)) {
-                _log.Debug($"Has ReplayGain, returning {rg.Loudness} for {levelId}");
-                __result = rg.Loudness;
+            if (replayGain is { } loudness) {
+                _log.Debug($"Has ReplayGain, returning {loudness} for {levelId}");
+                __result = loudness;
                 return;
             }
             _log.Debug($"No ReplayGain, falling back to default for {levelId}");

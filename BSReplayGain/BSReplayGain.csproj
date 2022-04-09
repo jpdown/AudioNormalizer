@@ -129,7 +129,6 @@
     <Compile Include="Installers\ReplayGainCoreInstaller.cs" />
     <Compile Include="Installers\ReplayGainMenuInstaller.cs" />
     <Compile Include="Managers\ReplayGainManager.cs" />
-    <Compile Include="Models\RGScan.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Configuration\PluginConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

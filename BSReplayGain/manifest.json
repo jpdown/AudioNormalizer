@@ -10,6 +10,7 @@
     "BSIPA": "^4.2.0",
     "SiraUtil": "^3.0.0",
     "ffmpeg": "^4.3.0",
-    "SongCore": "^3.9.5"
+    "SongCore": "^3.9.5",
+    "BeatSaberMarkupLanguage": "^1.6.3"
   }
 }

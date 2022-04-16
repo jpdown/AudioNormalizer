@@ -1,0 +1,17 @@
+﻿<vertical child-control-height='false'>
+    <horizontal>
+        <text text='~scan-status' align='Center'></text>
+    </horizontal>
+    <button id='scan-all' text='Scan All Songs' font-size='10' click-event='scan-all'></button>
+    <modal show-event='scan-all' hide-event='hide-modal' clickerino-offerino-closerino='true' move-to-center='true' size-delta-x='75' size-delta-y='30'>
+        <vertical preferred-width='45' preferred-height='45'>
+            <horizontal>
+                <text text='Are you sure? Scanning all songs will take a while.' align='Center'></text>
+            </horizontal>
+            <horizontal>
+                <button id='hide-modal' text='nah' click-event='hide-modal'></button>
+                <button id='yep-sure' text='yep' click-event='hide-modal' on-click='yep-sure'></button>
+            </horizontal>
+        </vertical>
+    </modal>
+</vertical>

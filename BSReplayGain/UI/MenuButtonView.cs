@@ -13,8 +13,16 @@ namespace BSReplayGain.UI
     {
         private SiraLog _log;
         private ReplayGainManager _replayGainManager;
+        private Config _config;
 
         private string _scanStatus = "";
+
+        [UIValue("scan-on-load")]
+        private bool scanOnLoad
+        {
+            get => _config.ScanOnSongsLoaded;
+            set => _config.ScanOnSongsLoaded = value;
+        }
 
         [UIValue("scan-status")]
         public string ScanStatus
@@ -33,11 +41,12 @@ namespace BSReplayGain.UI
         }
 
         [Inject]
-        public void Construct(SiraLog log, ReplayGainManager replayGainManager)
+        public void Construct(SiraLog log, ReplayGainManager replayGainManager, Config config)
         {
             _log = log;
             _replayGainManager = replayGainManager;
             _replayGainManager.ScanFinished += _updateScanStatus;
+            _config = config;
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)

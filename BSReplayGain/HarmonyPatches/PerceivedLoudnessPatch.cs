@@ -5,7 +5,7 @@ using SongCore;
 
 namespace BSReplayGain.HarmonyPatches
 {
-    public class PerceivedLoudnessPatch : IAffinity
+    internal class PerceivedLoudnessPatch : IAffinity
     {
         private readonly SiraLog _log;
         private readonly ReplayGainManager _rgManager;

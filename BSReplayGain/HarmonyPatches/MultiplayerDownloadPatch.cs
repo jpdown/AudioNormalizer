@@ -6,7 +6,7 @@ using SiraUtil.Logging;
 
 namespace BSReplayGain.HarmonyPatches
 {
-    public class MultiplayerDownloadPatch : IAffinity
+    internal class MultiplayerDownloadPatch : IAffinity
     {
         private readonly SiraLog _log;
         private readonly ReplayGainManager _rgManager;

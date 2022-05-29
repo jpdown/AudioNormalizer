@@ -5,7 +5,7 @@ using Zenject;
 
 namespace BSReplayGain
 {
-    public class BSReplayGainFlowCoordinator : FlowCoordinator
+    internal class BSReplayGainFlowCoordinator : FlowCoordinator
     {
         private MainFlowCoordinator _mainFlowCoordinator;
         private MenuButtonView _menuButtonView;
@@ -28,9 +28,9 @@ namespace BSReplayGain
             }
         }
 
-        protected override void BackButtonWasPressed(ViewController topViewController)
+        protected override void BackButtonWasPressed(ViewController viewController)
         {
-            base.BackButtonWasPressed(topViewController);
+            base.BackButtonWasPressed(viewController);
             _mainFlowCoordinator.DismissFlowCoordinator(this);
         }
     }

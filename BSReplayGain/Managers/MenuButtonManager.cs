@@ -5,7 +5,7 @@ using Zenject;
 
 namespace BSReplayGain.Managers
 {
-    public class MenuButtonManager : IInitializable, IDisposable
+    internal class MenuButtonManager : IInitializable, IDisposable
     {
         private readonly BSReplayGainFlowCoordinator _flowCoordinator;
         private readonly MainFlowCoordinator _mainFlowCoordinator;

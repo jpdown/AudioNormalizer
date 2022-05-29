@@ -9,7 +9,7 @@ namespace BSReplayGain.UI
 {
     [HotReload(RelativePathToLayout = @"./MenuButtonView.bsml")]
     [ViewDefinition("BSReplayGain.UI.MenuButtonView.bsml")]
-    public class MenuButtonView : BSMLAutomaticViewController
+    internal class MenuButtonView : BSMLAutomaticViewController
     {
         private SiraLog _log;
         private ReplayGainManager _replayGainManager;

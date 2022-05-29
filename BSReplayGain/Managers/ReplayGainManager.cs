@@ -14,12 +14,13 @@ using Zenject;
 
 namespace BSReplayGain.Managers
 {
-    public class ReplayGainManager : IInitializable, IDisposable
+    internal class ReplayGainManager : IInitializable, IDisposable
     {
         private static readonly string ScanResultsDir = $"{Environment.CurrentDirectory}/UserData/BSReplayGain/";
         private static readonly string ScanResultsPath = ScanResultsDir + "scans.json";
         private readonly string _ffmpegPath = Path.Combine(UnityGame.LibraryPath, "ffmpeg.exe");
         private readonly SiraLog _log;
+        private readonly Config _config;
 
         private readonly int _maxTasks;
         private readonly Dictionary<string, Task<float?>> _scanningLevels;
@@ -27,9 +28,10 @@ namespace BSReplayGain.Managers
         private bool _scanningAll;
         private List<CustomPreviewBeatmapLevel>? _unscannedLevels;
 
-        public ReplayGainManager(SiraLog log)
+        public ReplayGainManager(SiraLog log, Config config)
         {
             _log = log;
+            _config = config;
             _results = new Dictionary<string, float>();
             _scanningLevels = new Dictionary<string, Task<float?>>();
             _maxTasks = Environment.ProcessorCount;

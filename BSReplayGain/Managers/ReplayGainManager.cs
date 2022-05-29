@@ -62,7 +62,9 @@ namespace BSReplayGain.Managers
 
         public int NumScannedSongs()
         {
-            return _results.Count;
+            return (from level in Loader.CustomLevels.Values
+                where _results.ContainsKey(level.levelID)
+                select level).Count();
         }
 
         public float? GetReplayGain(string levelId)

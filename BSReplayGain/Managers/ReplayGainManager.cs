@@ -12,34 +12,43 @@ using SiraUtil.Logging;
 using SongCore;
 using Zenject;
 
-namespace BSReplayGain.Managers {
-    public class ReplayGainManager : IInitializable, IDisposable {
-        private Dictionary<string, float> _results;
-        private readonly Dictionary<string, Task<float?>> _scanningLevels;
-        private List<CustomPreviewBeatmapLevel>? _unscannedLevels;
-        private readonly SiraLog _log;
-        
+namespace BSReplayGain.Managers
+{
+    public class ReplayGainManager : IInitializable, IDisposable
+    {
         private static readonly string ScanResultsDir = $"{Environment.CurrentDirectory}/UserData/BSReplayGain/";
         private static readonly string ScanResultsPath = ScanResultsDir + "scans.json";
         private readonly string _ffmpegPath = Path.Combine(UnityGame.LibraryPath, "ffmpeg.exe");
+        private readonly SiraLog _log;
 
         private readonly int _maxTasks;
-        private bool _scanningAll = false;
-        
-        public event Action<int> ScanFinished; // Parameter is new count of scanned songs
+        private readonly Dictionary<string, Task<float?>> _scanningLevels;
+        private Dictionary<string, float> _results;
+        private bool _scanningAll;
+        private List<CustomPreviewBeatmapLevel>? _unscannedLevels;
 
-        public ReplayGainManager(SiraLog log) {
+        public ReplayGainManager(SiraLog log)
+        {
             _log = log;
             _results = new Dictionary<string, float>();
             _scanningLevels = new Dictionary<string, Task<float?>>();
             _maxTasks = Environment.ProcessorCount;
         }
 
-        public void Initialize() {
-            if (!Directory.Exists(ScanResultsDir)) {
+        public void Dispose()
+        {
+            Loader.SongsLoadedEvent -= _findUnscannedSongs;
+        }
+
+        public void Initialize()
+        {
+            if (!Directory.Exists(ScanResultsDir))
+            {
                 Directory.CreateDirectory(ScanResultsDir);
             }
-            if (!File.Exists(ScanResultsPath)) {
+
+            if (!File.Exists(ScanResultsPath))
+            {
                 File.WriteAllText(ScanResultsPath, JsonConvert.SerializeObject(_results), Encoding.UTF8);
             }
             else
@@ -47,44 +56,54 @@ namespace BSReplayGain.Managers {
                 _results = JsonConvert.DeserializeObject<Dictionary<string, float>>
                     (File.ReadAllText(ScanResultsPath, Encoding.UTF8)) ?? _results;
             }
-            
+
             // Subscribe to songs loaded event
-            SongCore.Loader.SongsLoadedEvent += _findUnscannedSongs;
+            Loader.SongsLoadedEvent += _findUnscannedSongs;
         }
 
-        public void Dispose() {
-            SongCore.Loader.SongsLoadedEvent -= _findUnscannedSongs;
-        }
+        public event Action<int> ScanFinished; // Parameter is new count of scanned songs
 
-        public int NumScannedSongs() {
+        public int NumScannedSongs()
+        {
             return _results.Count;
         }
 
-        public float? GetReplayGain(string levelId) {
+        public float? GetReplayGain(string levelId)
+        {
             var success = _results.TryGetValue(levelId, out var rg);
             return success ? rg : (float?)null;
         }
 
-        public void QueueScanSong(CustomPreviewBeatmapLevel level) {
+        public void QueueScanSong(CustomPreviewBeatmapLevel level)
+        {
             _scanningLevels.TryGetValue(level.levelID, out var scan);
-            if (scan is { }) {
+            if (scan is { })
+            {
                 return;
             }
-            
+
             _scanningLevels.Add(level.levelID, _internalScanSong(level));
         }
 
-        public void ScanAllSongs() {
-            if (_unscannedLevels is null) return;
+        public void ScanAllSongs()
+        {
+            if (_unscannedLevels is null)
+            {
+                return;
+            }
+
             _scanningAll = true;
-            for (var i = 0; i < _maxTasks && i < _unscannedLevels.Count; i++) {
+            for (var i = 0; i < _maxTasks && i < _unscannedLevels.Count; i++)
+            {
                 _scanNextSong();
             }
         }
 
-        public async Task<float?> ScanSong(CustomPreviewBeatmapLevel level) {
+        public async Task<float?> ScanSong(CustomPreviewBeatmapLevel level)
+        {
             _scanningLevels.TryGetValue(level.levelID, out var scan);
-            if (scan is { } currentScan) {
+            if (scan is { } currentScan)
+            {
                 return await currentScan;
             }
 
@@ -93,9 +112,10 @@ namespace BSReplayGain.Managers {
             return await scan;
         }
 
-        private async Task<float?> _internalScanSong(CustomPreviewBeatmapLevel level) {
+        private async Task<float?> _internalScanSong(CustomPreviewBeatmapLevel level)
+        {
             string? loudness = null;
-            
+
             var scanProcess = new Process();
             scanProcess.StartInfo.UseShellExecute = false;
             scanProcess.StartInfo.CreateNoWindow = true;
@@ -104,8 +124,13 @@ namespace BSReplayGain.Managers {
             scanProcess.StartInfo.Arguments =
                 $"-nostats -hide_banner -i \"{level.songPreviewAudioClipPath}\" -map a:0 -filter ebur128=framelog=verbose -f null -";
 
-            scanProcess.ErrorDataReceived += (s, e) => {
-                if (!e.Data.StartsWith("    I:")) return;
+            scanProcess.ErrorDataReceived += (s, e) =>
+            {
+                if (!e.Data.StartsWith("    I:"))
+                {
+                    return;
+                }
+
                 var split = e.Data.Split();
                 loudness = split[split.Length - 2]; // Second last entry
             };
@@ -115,47 +140,59 @@ namespace BSReplayGain.Managers {
             scanProcess.Start();
             scanProcess.BeginErrorReadLine();
             await Task.Run(() => scanProcess.WaitForExit());
-            
-            if (loudness == null) {
+
+            if (loudness == null)
+            {
                 return null;
             }
-            
+
             var parsedLoudness = float.Parse(loudness);
 
             _setReplayGain(level.levelID, parsedLoudness);
             _scanningLevels.Remove(level.levelID);
 
             _log.Debug($"Finished scan, {level.levelID} - {parsedLoudness}");
-            
+
             ScanFinished.Invoke(_results.Count);
             _scanNextSong();
             return parsedLoudness;
         }
 
-        private void _setReplayGain(string levelId, float rg) {
-            if (_results.ContainsKey(levelId)) {
+        private void _setReplayGain(string levelId, float rg)
+        {
+            if (_results.ContainsKey(levelId))
+            {
                 _results.Remove(levelId);
             }
 
             _results.Add(levelId, rg);
-            if (!_scanningAll) {
+            if (!_scanningAll)
+            {
                 File.WriteAllText(ScanResultsPath, JsonConvert.SerializeObject(_results), Encoding.UTF8);
             }
         }
 
-        private void _scanNextSong() {
-            if (!_scanningAll) return;
-            if (_unscannedLevels is null || _unscannedLevels.Count == 0) {
+        private void _scanNextSong()
+        {
+            if (!_scanningAll)
+            {
+                return;
+            }
+
+            if (_unscannedLevels is null || _unscannedLevels.Count == 0)
+            {
                 _scanningAll = false;
                 File.WriteAllText(ScanResultsPath, JsonConvert.SerializeObject(_results), Encoding.UTF8);
                 return;
             }
+
             var level = _unscannedLevels.First();
             ScanSong(level);
             _unscannedLevels.Remove(level);
         }
 
-        private void _findUnscannedSongs(Loader loader, ConcurrentDictionary<string, CustomPreviewBeatmapLevel> levels) {
+        private void _findUnscannedSongs(Loader loader, ConcurrentDictionary<string, CustomPreviewBeatmapLevel> levels)
+        {
             _log.Info("Finding unscanned songs");
             var unscanned = from level in levels
                 where !_results.ContainsKey(level.Value.levelID)

@@ -2,6 +2,7 @@
 using BSReplayGain.HarmonyPatches;
 using BSReplayGain.Managers;
 using BSReplayGain.UI;
+using IPA.Loader;
 using Zenject;
 
 namespace BSReplayGain.Installers
@@ -11,7 +12,8 @@ namespace BSReplayGain.Installers
         public override void InstallBindings()
         {
             // Install patch if MultiplayerCore is installed
-            if (IPA.Loader.PluginManager.EnabledPlugins.Any(x => x.Id == "MultiplayerCore")) {
+            if (PluginManager.EnabledPlugins.Any(x => x.Id == "MultiplayerCore"))
+            {
                 Container.BindInterfacesTo<MultiplayerDownloadPatch>().AsSingle();
             }
 

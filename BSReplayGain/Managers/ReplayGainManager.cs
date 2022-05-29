@@ -16,8 +16,8 @@ namespace BSReplayGain.Managers
 {
     internal class ReplayGainManager : IInitializable, IDisposable
     {
-        private static readonly string ScanResultsDir = $"{Environment.CurrentDirectory}/UserData/BSReplayGain/";
-        private static readonly string ScanResultsPath = ScanResultsDir + "scans.json";
+        private static readonly string ScanResultsDir = Path.Combine(UnityGame.UserDataPath, nameof(BSReplayGain));
+        private static readonly string ScanResultsPath = Path.Combine(ScanResultsDir, "scans.json");
         private readonly string _ffmpegPath = Path.Combine(UnityGame.LibraryPath, "ffmpeg.exe");
         private readonly SiraLog _log;
         private readonly Config _config;
@@ -44,11 +44,6 @@ namespace BSReplayGain.Managers
 
         public void Initialize()
         {
-            if (!Directory.Exists(ScanResultsDir))
-            {
-                Directory.CreateDirectory(ScanResultsDir);
-            }
-
             if (!File.Exists(ScanResultsPath))
             {
                 File.WriteAllText(ScanResultsPath, JsonConvert.SerializeObject(_results), Encoding.UTF8);
@@ -89,6 +84,7 @@ namespace BSReplayGain.Managers
 
         public void ScanAllSongs()
         {
+            _log.Info("About to scan all songs");
             if (_unscannedLevels is null)
             {
                 return;
@@ -200,6 +196,11 @@ namespace BSReplayGain.Managers
                 where !_results.ContainsKey(level.Value.levelID)
                 select level.Value;
             _unscannedLevels = unscanned.ToList();
+
+            if (_config.ScanOnSongsLoaded)
+            {
+                ScanAllSongs();
+            }
         }
     }
 }

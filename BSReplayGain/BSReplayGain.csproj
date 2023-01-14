@@ -1,38 +1,18 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
         <ProductVersion>8.0.30703</ProductVersion>
-        <SchemaVersion>2.0</SchemaVersion>
-        <ProjectGuid>{64BE47B0-9C08-4EB9-8A9D-FFAD1BEBA43F}</ProjectGuid>
-        <OutputType>Library</OutputType>
-        <AppDesignerFolder>Properties</AppDesignerFolder>
+        <ProjectGuid>{3F2B2729-99E5-4285-AAB2-C65A09501D83}</ProjectGuid>
         <RootNamespace>BSReplayGain</RootNamespace>
         <AssemblyName>BSReplayGain</AssemblyName>
-        <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-        <FileAlignment>512</FileAlignment>
+        <TargetFramework>net472</TargetFramework>
         <DebugSymbols>true</DebugSymbols>
-        <DebugType>portable</DebugType>
         <LocalRefsDir Condition="Exists('..\Refs')">..\Refs</LocalRefsDir>
         <BeatSaberDir>$(LocalRefsDir)</BeatSaberDir>
         <AppOutputBase>$(MSBuildProjectDirectory)\</AppOutputBase>
-        <!--<PathMap>$(AppOutputBase)=X:\$(AssemblyName)\</PathMap>-->
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
+        <AssemblyTitle>BSReplayGain</AssemblyTitle>
+        <Product>BSReplayGain</Product>
+        <Copyright>Copyright © $ModAuthor$</Copyright>
         <LangVersion>8</LangVersion>
-        <Nullable>enable</Nullable>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-        <Optimize>false</Optimize>
-        <OutputPath>bin\Debug\</OutputPath>
-        <DefineConstants>DEBUG;TRACE</DefineConstants>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-        <Optimize>true</Optimize>
-        <OutputPath>bin\Release\</OutputPath>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
     </PropertyGroup>
     <PropertyGroup Condition="$(DefineConstants.Contains('CIBuild')) OR '$(NCrunch)' == '1'">
         <DisableCopyToPlugins>True</DisableCopyToPlugins>
@@ -128,26 +108,6 @@
         </Reference>
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="BSReplayGainFlowCoordinator.cs" />
-        <Compile Include="HarmonyPatches\MultiplayerDownloadPatch.cs" />
-        <Compile Include="HarmonyPatches\PerceivedLoudnessPatch.cs" />
-        <Compile Include="Installers\ReplayGainCoreInstaller.cs" />
-        <Compile Include="Installers\ReplayGainMenuInstaller.cs" />
-        <Compile Include="Managers\MenuButtonManager.cs" />
-        <Compile Include="Managers\ReplayGainManager.cs" />
-        <Compile Include="Plugin.cs" />
-        <Compile Include="Config.cs" />
-        <Compile Include="Properties\AssemblyInfo.cs" />
-        <Compile Include="UI\MenuButtonView.cs" />
-    </ItemGroup>
-    <ItemGroup>
-        <EmbeddedResource Include="manifest.json" />
-    </ItemGroup>
-    <ItemGroup>
-        <None Include="Directory.Build.props" Condition="Exists('Directory.Build.props')" />
-        <None Include="BSReplayGain.csproj.user" Condition="Exists('BSReplayGain.csproj.user')" />
-    </ItemGroup>
-    <ItemGroup>
         <PackageReference Include="BeatSaberModdingTools.Tasks">
             <Version>2.0.0-beta4</Version>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -155,10 +115,12 @@
         </PackageReference>
     </ItemGroup>
     <ItemGroup>
-        <Folder Include="Views" />
+        <None Include="Directory.Build.props" Condition="Exists('Directory.Build.props')" />
+        <None Include="Directory.Build.targets" Condition="Exists('Directory.Build.targets')" />
+        <None Include="YeetSpatializer.csproj.user" Condition="Exists('YeetSpatializer.csproj.user')" />
     </ItemGroup>
     <ItemGroup>
-        <EmbeddedResource Include="UI\MenuButtonView.bsml" />
+        <None Remove="manifest.json" />
+        <EmbeddedResource Include="manifest.json" />
     </ItemGroup>
-    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

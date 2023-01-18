@@ -22,6 +22,7 @@ namespace BSReplayGain
                 .Generated<Config>();
             zenjector.Install<ReplayGainCoreInstaller>(Location.App, config);
             zenjector.Install<ReplayGainMenuInstaller>(Location.Menu);
+            zenjector.Install<ReplayGainGameInstaller>(Location.GameCore);
         }
     }
 }

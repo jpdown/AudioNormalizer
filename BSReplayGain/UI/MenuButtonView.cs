@@ -1,7 +1,6 @@
 ﻿using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using BSReplayGain.Managers;
-using SiraUtil.Logging;
 using SongCore;
 using Zenject;
 
@@ -11,17 +10,23 @@ namespace BSReplayGain.UI
     [ViewDefinition("BSReplayGain.UI.MenuButtonView.bsml")]
     internal class MenuButtonView : BSMLAutomaticViewController
     {
-        private SiraLog _log;
-        private ReplayGainManager _replayGainManager;
-        private Config _config;
+        private ReplayGainManager _replayGainManager = null!;
+        private Config _config = null!;
 
         private string _scanStatus = "";
 
         [UIValue("scan-on-load")]
-        private bool scanOnLoad
+        private bool ScanOnLoad
         {
             get => _config.ScanOnSongsLoaded;
             set => _config.ScanOnSongsLoaded = value;
+        }
+        
+        [UIValue("clipping-prevention")]
+        private bool ClippingPrevention
+        {
+            get => _config.ClipPrevention;
+            set => _config.ClipPrevention = value;
         }
 
         [UIValue("scan-status")]
@@ -41,9 +46,8 @@ namespace BSReplayGain.UI
         }
 
         [Inject]
-        public void Construct(SiraLog log, ReplayGainManager replayGainManager, Config config)
+        public void Construct(ReplayGainManager replayGainManager, Config config)
         {
-            _log = log;
             _replayGainManager = replayGainManager;
             _replayGainManager.ScanFinished += _updateScanStatus;
             _config = config;

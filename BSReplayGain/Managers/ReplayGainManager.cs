@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Reflection;
 using System.Threading.Tasks;
+using BSReplayGain.Models;
 using IPA.Utilities;
-using Newtonsoft.Json;
 using SiraUtil.Logging;
 using SongCore;
 using Zenject;
@@ -16,25 +16,36 @@ namespace BSReplayGain.Managers
 {
     internal class ReplayGainManager : IInitializable, IDisposable
     {
-        private static readonly string ScanResultsDir = Path.Combine(UnityGame.UserDataPath, nameof(BSReplayGain));
-        private static readonly string ScanResultsPath = Path.Combine(ScanResultsDir, "scans.json");
         private readonly string _ffmpegPath = Path.Combine(UnityGame.LibraryPath, "ffmpeg.exe");
         private readonly SiraLog _log;
         private readonly Config _config;
 
         private readonly int _maxTasks;
         private readonly Dictionary<string, Task<float?>> _scanningLevels;
-        private Dictionary<string, float> _results;
+        private ScansModel _results = null!; // This will be initialized in Initialize
         private bool _scanningAll;
         private List<CustomPreviewBeatmapLevel>? _unscannedLevels;
 
-        public ReplayGainManager(SiraLog log, Config config)
+        private const float ClipThreshold = -1f; // Give 1 dB of headroom
+        private readonly float _targetLoudness;
+        private readonly float _preamp;
+        
+        public event Action<int>? ScanFinished; // Parameter is new count of scanned songs
+
+        public ReplayGainManager(SiraLog log, Config config, AudioManagerSO audioManager)
         {
             _log = log;
             _config = config;
-            _results = new Dictionary<string, float>();
             _scanningLevels = new Dictionary<string, Task<float?>>();
             _maxTasks = Environment.ProcessorCount;
+
+            // Gets the perceived loudness const from base game
+            _targetLoudness = (float) (typeof(PerceivedLoudnessPerLevelModel)
+                .GetField("kPerceivedLoudnessTarget", BindingFlags.Static | BindingFlags.NonPublic)
+                ?.GetValue(null) ?? throw new MissingFieldException());
+
+            // Gets the global offset applied to all music volume, effectively our preamp
+            _preamp = audioManager.GetField<float, AudioManagerSO>("_musicVolumeOffset");
         }
 
         public void Dispose()
@@ -44,33 +55,47 @@ namespace BSReplayGain.Managers
 
         public void Initialize()
         {
-            if (!File.Exists(ScanResultsPath))
-            {
-                File.WriteAllText(ScanResultsPath, JsonConvert.SerializeObject(_results), Encoding.UTF8);
-            }
-            else
-            {
-                _results = JsonConvert.DeserializeObject<Dictionary<string, float>>
-                    (File.ReadAllText(ScanResultsPath, Encoding.UTF8)) ?? _results;
-            }
-
+            _results = ScansModel.Load();
             // Subscribe to songs loaded event
             Loader.SongsLoadedEvent += _findUnscannedSongs;
+
         }
 
-        public event Action<int> ScanFinished; // Parameter is new count of scanned songs
 
         public int NumScannedSongs()
         {
             return (from level in Loader.CustomLevels.Values
-                where _results.ContainsKey(level.levelID)
+                where _results.Contains(level.levelID)
                 select level).Count();
         }
 
-        public float? GetReplayGain(string levelId)
+        public Scan? GetReplayGain(string levelId)
         {
-            var success = _results.TryGetValue(levelId, out var rg);
-            return success ? rg : (float?)null;
+            var success = _results.TryGet(levelId, out var scan);
+            return success ? scan : null;
+        }
+
+        public float? GetLoudness(string levelId)
+        {
+            var success = _results.TryGet(levelId, out var scan);
+            if (!success) return null;
+
+            var loudness = scan.Loudness;
+
+            if (_config.ClipPrevention)
+            {
+                // Apply gain to peak
+                var gainedPeak = scan.Peak + (_targetLoudness - scan.Loudness + _preamp);
+                if (gainedPeak > ClipThreshold)
+                {
+                    // We need to adjust gain so that gained peak is at threshold
+                    var adjustment = gainedPeak - ClipThreshold;
+                    loudness += adjustment;
+                    _log.Debug($"Adjusting loudness by {adjustment}");
+                }
+            } 
+            
+            return loudness;
         }
 
         public void QueueScanSong(CustomPreviewBeatmapLevel level)
@@ -99,22 +124,24 @@ namespace BSReplayGain.Managers
             }
         }
 
-        public async Task<float?> ScanSong(CustomPreviewBeatmapLevel level)
+        public async Task ScanSong(CustomPreviewBeatmapLevel level)
         {
             _scanningLevels.TryGetValue(level.levelID, out var scan);
             if (scan is { } currentScan)
             {
-                return await currentScan;
+                await currentScan;
+                return;
             }
 
             scan = _internalScanSong(level);
             _scanningLevels.Add(level.levelID, scan);
-            return await scan;
+            await scan;
         }
 
         private async Task<float?> _internalScanSong(CustomPreviewBeatmapLevel level)
         {
             string? loudness = null;
+            string? peak = null;
 
             var scanProcess = new Process();
             scanProcess.StartInfo.UseShellExecute = false;
@@ -122,17 +149,21 @@ namespace BSReplayGain.Managers
             scanProcess.StartInfo.FileName = _ffmpegPath;
             scanProcess.StartInfo.RedirectStandardError = true; // ffmpeg outputs to stderr
             scanProcess.StartInfo.Arguments =
-                $"-nostats -hide_banner -i \"{level.songPreviewAudioClipPath}\" -map a:0 -filter ebur128=framelog=verbose -f null -";
+                $"-nostats -hide_banner -i \"{level.songPreviewAudioClipPath}\" -map a:0 -filter ebur128=framelog=verbose:peak=true -f null -";
 
             scanProcess.ErrorDataReceived += (s, e) =>
             {
-                if (!e.Data.StartsWith("    I:"))
+                if (e.Data == null) return;
+                
+                if (e.Data.StartsWith("    I:"))
                 {
-                    return;
+                    var split = e.Data.Split();
+                    loudness = split[split.Length - 2]; // Second last entry
+                } else if (e.Data.StartsWith("    Peak:"))
+                {
+                    var split = e.Data.Split();
+                    peak = split[split.Length - 2]; // Second last entry
                 }
-
-                var split = e.Data.Split();
-                loudness = split[split.Length - 2]; // Second last entry
             };
 
             _log.Debug($"About to start scan for song {level.levelID}");
@@ -141,34 +172,35 @@ namespace BSReplayGain.Managers
             scanProcess.BeginErrorReadLine();
             await Task.Run(() => scanProcess.WaitForExit());
 
-            if (loudness == null)
+            if (loudness == null || peak == null)
             {
                 return null;
             }
 
             var parsedLoudness = float.Parse(loudness);
+            var parsedPeak = float.Parse(peak);
 
-            _setReplayGain(level.levelID, parsedLoudness);
+            _setReplayGain(level.levelID, parsedLoudness, parsedPeak);
             _scanningLevels.Remove(level.levelID);
 
-            _log.Debug($"Finished scan, {level.levelID} - {parsedLoudness}");
+            _log.Debug($"Finished scan, {level.levelID} - {parsedLoudness} peak {parsedPeak}");
 
-            ScanFinished.Invoke(_results.Count);
+            ScanFinished?.Invoke(_results.Count());
             _scanNextSong();
             return parsedLoudness;
         }
 
-        private void _setReplayGain(string levelId, float rg)
+        private void _setReplayGain(string levelId, float rg, float peak)
         {
-            if (_results.ContainsKey(levelId))
+            if (_results.Contains(levelId))
             {
                 _results.Remove(levelId);
             }
 
-            _results.Add(levelId, rg);
+            _results.Add(levelId, rg, peak);
             if (!_scanningAll)
             {
-                File.WriteAllText(ScanResultsPath, JsonConvert.SerializeObject(_results), Encoding.UTF8);
+                _results.Save();
             }
         }
 
@@ -182,7 +214,7 @@ namespace BSReplayGain.Managers
             if (_unscannedLevels is null || _unscannedLevels.Count == 0)
             {
                 _scanningAll = false;
-                File.WriteAllText(ScanResultsPath, JsonConvert.SerializeObject(_results), Encoding.UTF8);
+                _results.Save();
                 return;
             }
 
@@ -195,7 +227,7 @@ namespace BSReplayGain.Managers
         {
             _log.Info("Finding unscanned songs");
             var unscanned = from level in levels
-                where !_results.ContainsKey(level.Value.levelID)
+                where !_results.Contains(level.Value.levelID)
                 select level.Value;
             _unscannedLevels = unscanned.ToList();
 

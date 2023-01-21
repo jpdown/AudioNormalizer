@@ -13,6 +13,7 @@
         <Product>BSReplayGain</Product>
         <Copyright>Copyright © $ModAuthor$</Copyright>
         <LangVersion>8</LangVersion>
+        <Nullable>enable</Nullable>
     </PropertyGroup>
     <PropertyGroup Condition="$(DefineConstants.Contains('CIBuild')) OR '$(NCrunch)' == '1'">
         <DisableCopyToPlugins>True</DisableCopyToPlugins>
@@ -122,5 +123,7 @@
     <ItemGroup>
         <None Remove="manifest.json" />
         <EmbeddedResource Include="manifest.json" />
+        <None Remove="UI\MenuButtonView.bsml" />
+        <EmbeddedResource Include="UI\MenuButtonView.bsml" />
     </ItemGroup>
 </Project>

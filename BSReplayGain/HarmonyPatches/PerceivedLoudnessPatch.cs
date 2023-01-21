@@ -21,11 +21,11 @@ namespace BSReplayGain.HarmonyPatches
             nameof(PerceivedLoudnessPerLevelModel.GetLoudnessByLevelId))]
         internal void Postfix(string levelId, ref float __result)
         {
-            var replayGain = _rgManager.GetReplayGain(levelId);
-            if (replayGain is { } loudness)
+            var loudness = _rgManager.GetLoudness(levelId);
+            if (loudness != null)
             {
                 _log.Debug($"Has ReplayGain, returning {loudness} for {levelId}");
-                __result = loudness;
+                __result = (float)loudness;
                 return;
             }
 

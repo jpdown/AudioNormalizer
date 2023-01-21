@@ -3,6 +3,7 @@
         <text text='~scan-status' align='Center'></text>
     </horizontal>
     <bool-setting text='Scan on Songs Loaded' value='scan-on-load' apply-on-change='true'></bool-setting>
+    <bool-setting text='Clipping Prevention' value='clipping-prevention' apply-on-change='true'></bool-setting>
     <button id='scan-all' text='Scan All Songs' font-size='10' click-event='scan-all'></button>
     <modal show-event='scan-all' hide-event='hide-modal' clickerino-offerino-closerino='true' move-to-center='true' size-delta-x='75' size-delta-y='30'>
         <vertical preferred-width='45' preferred-height='45'>

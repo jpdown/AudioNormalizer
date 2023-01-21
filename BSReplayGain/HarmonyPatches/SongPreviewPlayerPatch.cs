@@ -16,7 +16,7 @@ namespace BSReplayGain.HarmonyPatches
         }
         
         [AffinityPrefix]
-        [AffinityPatch(typeof(SongPreviewPlayer), nameof(SongPreviewPlayer.CrossfadeTo), argumentTypes: new Type[] { typeof(AudioClip), typeof(float), typeof(float), typeof(float), typeof(bool), typeof(Action) })]
+        [AffinityPatch(typeof(SongPreviewPlayer), nameof(SongPreviewPlayer.CrossfadeTo), argumentTypes: new[] { typeof(AudioClip), typeof(float), typeof(float), typeof(float), typeof(bool), typeof(Action) })]
         internal void OverrideMusicVolume(ref float musicVolume)
         {
             // When starting a song, the musicVolume is set based on the perceived loudness

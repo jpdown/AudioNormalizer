@@ -7,8 +7,8 @@ namespace BSReplayGain
 {
     internal class BSReplayGainFlowCoordinator : FlowCoordinator
     {
-        private MainFlowCoordinator _mainFlowCoordinator;
-        private MenuButtonView _menuButtonView;
+        private MainFlowCoordinator _mainFlowCoordinator = null!;
+        private MenuButtonView _menuButtonView = null!;
 
         [Inject]
         public void Construct(MainFlowCoordinator mainFlowCoordinator, MenuButtonView menuButtonView)

@@ -3,8 +3,8 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'BSReplayGain.sln'
-      - 'BSReplayGain/**'
+      - 'AudioNormalizer.sln'
+      - 'AudioNormalizer/**'
       - '.github/workflows/main.yml'
 jobs:
   Build:
@@ -24,7 +24,7 @@ jobs:
     - name: Download Mod Dependencies
       uses: Goobwabber/download-beatmods-deps@1.2
       with:
-        manifest: ${{github.workspace}}/BSReplayGain/manifest.json
+        manifest: ${{github.workspace}}/AudioNormalizer/manifest.json
     - name: Build
       id: Build
       env:

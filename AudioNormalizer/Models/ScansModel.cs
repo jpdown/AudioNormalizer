@@ -20,8 +20,8 @@ namespace AudioNormalizer.Models
 
         public static ScansModel Load()
         {
-            var model = JsonConvert.DeserializeObject<ScansModel>
-              (File.ReadAllText(ScanResultsPath, Encoding.UTF8)) ?? new ScansModel();
+            var model = File.Exists(ScanResultsPath) ? JsonConvert.DeserializeObject<ScansModel>
+              (File.ReadAllText(ScanResultsPath, Encoding.UTF8)) : new ScansModel();
 
             if (model._version != CurrVersion)
             {

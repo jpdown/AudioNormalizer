@@ -6,15 +6,15 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using BSReplayGain.Models;
+using AudioNormalizer.Models;
 using IPA.Utilities;
 using SiraUtil.Logging;
 using SongCore;
 using Zenject;
 
-namespace BSReplayGain.Managers
+namespace AudioNormalizer.Managers
 {
-    internal class ReplayGainManager : IInitializable, IDisposable
+    internal class ScannerManager : IInitializable, IDisposable
     {
         private readonly string _ffmpegPath = Path.Combine(UnityGame.LibraryPath, "ffmpeg.exe");
         private readonly SiraLog _log;
@@ -32,7 +32,7 @@ namespace BSReplayGain.Managers
         
         public event Action<int>? ScanFinished; // Parameter is new count of scanned songs
 
-        public ReplayGainManager(SiraLog log, Config config, AudioManagerSO audioManager)
+        public ScannerManager(SiraLog log, Config config, AudioManagerSO audioManager)
         {
             _log = log;
             _config = config;
@@ -69,7 +69,7 @@ namespace BSReplayGain.Managers
                 select level).Count();
         }
 
-        public Scan? GetReplayGain(string levelId)
+        public Scan? GetScan(string levelId)
         {
             var success = _results.TryGet(levelId, out var scan);
             return success ? scan : null;
@@ -180,7 +180,7 @@ namespace BSReplayGain.Managers
             var parsedLoudness = float.Parse(loudness);
             var parsedPeak = float.Parse(peak);
 
-            _setReplayGain(level.levelID, parsedLoudness, parsedPeak);
+            _setScan(level.levelID, parsedLoudness, parsedPeak);
             _scanningLevels.Remove(level.levelID);
 
             _log.Debug($"Finished scan, {level.levelID} - {parsedLoudness} peak {parsedPeak}");
@@ -190,7 +190,7 @@ namespace BSReplayGain.Managers
             return parsedLoudness;
         }
 
-        private void _setReplayGain(string levelId, float rg, float peak)
+        private void _setScan(string levelId, float rg, float peak)
         {
             if (_results.Contains(levelId))
             {

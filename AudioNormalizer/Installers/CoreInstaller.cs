@@ -1,14 +1,14 @@
-﻿using BSReplayGain.HarmonyPatches;
-using BSReplayGain.Managers;
+﻿using AudioNormalizer.HarmonyPatches;
+using AudioNormalizer.Managers;
 using Zenject;
 
-namespace BSReplayGain.Installers
+namespace AudioNormalizer.Installers
 {
-    internal class ReplayGainCoreInstaller : Installer
+    internal class CoreInstaller : Installer
     {
         private readonly Config _config;
 
-        public ReplayGainCoreInstaller(Config config)
+        public CoreInstaller(Config config)
         {
             _config = config;
         }
@@ -16,7 +16,7 @@ namespace BSReplayGain.Installers
         public override void InstallBindings()
         {
             Container.BindInstance(_config).AsSingle();
-            Container.BindInterfacesAndSelfTo<ReplayGainManager>().AsSingle();
+            Container.BindInterfacesAndSelfTo<ScannerManager>().AsSingle();
             Container.BindInterfacesTo<PerceivedLoudnessPatch>().AsSingle();
         }
     }

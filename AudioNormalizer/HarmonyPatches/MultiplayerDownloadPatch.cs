@@ -1,17 +1,17 @@
 ﻿using System.Threading.Tasks;
-using BSReplayGain.Managers;
+using AudioNormalizer.Managers;
 using MultiplayerCore.Objects;
 using SiraUtil.Affinity;
 using SiraUtil.Logging;
 
-namespace BSReplayGain.HarmonyPatches
+namespace AudioNormalizer.HarmonyPatches
 {
     internal class MultiplayerDownloadPatch : IAffinity
     {
         private readonly SiraLog _log;
-        private readonly ReplayGainManager _rgManager;
+        private readonly ScannerManager _rgManager;
 
-        public MultiplayerDownloadPatch(ReplayGainManager rgManager, SiraLog log)
+        public MultiplayerDownloadPatch(ScannerManager rgManager, SiraLog log)
         {
             _rgManager = rgManager;
             _log = log;
@@ -33,7 +33,7 @@ namespace BSReplayGain.HarmonyPatches
         {
             var result = await originalTask;
             if (!result.isError && result.beatmapLevel is CustomPreviewBeatmapLevel customLevel
-                                && !(_rgManager.GetReplayGain(customLevel.levelID) is { }))
+                                && !(_rgManager.GetScan(customLevel.levelID) is { }))
             {
                 _log.Debug("Scanning RG");
                 await _rgManager.ScanSong(customLevel);

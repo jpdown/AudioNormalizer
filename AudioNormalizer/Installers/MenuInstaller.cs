@@ -1,13 +1,13 @@
 ﻿using System.Linq;
-using BSReplayGain.HarmonyPatches;
-using BSReplayGain.Managers;
-using BSReplayGain.UI;
+using AudioNormalizer.HarmonyPatches;
+using AudioNormalizer.Managers;
+using AudioNormalizer.UI;
 using IPA.Loader;
 using Zenject;
 
-namespace BSReplayGain.Installers
+namespace AudioNormalizer.Installers
 {
-    internal class ReplayGainMenuInstaller : Installer
+    internal class MenuInstaller : Installer
     {
         public override void InstallBindings()
         {
@@ -18,7 +18,7 @@ namespace BSReplayGain.Installers
             }
 
             Container.Bind<MenuButtonView>().FromNewComponentAsViewController().AsSingle();
-            Container.Bind<BSReplayGainFlowCoordinator>()
+            Container.Bind<MenuFlowCoordinator>()
                 .FromNewComponentOnNewGameObject().AsSingle();
             Container.BindInterfacesTo<MenuButtonManager>().AsSingle();
         }

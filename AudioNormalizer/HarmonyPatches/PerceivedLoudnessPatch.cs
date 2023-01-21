@@ -1,16 +1,16 @@
-﻿using BSReplayGain.Managers;
+﻿using AudioNormalizer.Managers;
 using SiraUtil.Affinity;
 using SiraUtil.Logging;
 using SongCore;
 
-namespace BSReplayGain.HarmonyPatches
+namespace AudioNormalizer.HarmonyPatches
 {
     internal class PerceivedLoudnessPatch : IAffinity
     {
         private readonly SiraLog _log;
-        private readonly ReplayGainManager _rgManager;
+        private readonly ScannerManager _rgManager;
 
-        public PerceivedLoudnessPatch(ReplayGainManager rgManager, SiraLog log)
+        public PerceivedLoudnessPatch(ScannerManager rgManager, SiraLog log)
         {
             _rgManager = rgManager;
             _log = log;
@@ -24,12 +24,12 @@ namespace BSReplayGain.HarmonyPatches
             var loudness = _rgManager.GetLoudness(levelId);
             if (loudness != null)
             {
-                _log.Debug($"Has ReplayGain, returning {loudness} for {levelId}");
+                _log.Debug($"Has loudness scan, returning {loudness} for {levelId}");
                 __result = (float)loudness;
                 return;
             }
 
-            _log.Debug($"No ReplayGain, falling back to default for {levelId}");
+            _log.Debug($"No loudness scan, falling back to default for {levelId}");
             // Start scan for next time this song is encountered
             var level = Loader.GetLevelById(levelId);
             if (level is CustomPreviewBeatmapLevel customLevel)

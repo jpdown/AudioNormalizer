@@ -1,9 +1,9 @@
-using BSReplayGain.HarmonyPatches;
+using AudioNormalizer.HarmonyPatches;
 using Zenject;
 
-namespace BSReplayGain.Installers
+namespace AudioNormalizer.Installers
 {
-    public class ReplayGainGameInstaller : Installer
+    public class GameInstaller : Installer
     {
         public override void InstallBindings()
         {

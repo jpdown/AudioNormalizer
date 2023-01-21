@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32228.430
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSReplayGain", "BSReplayGain\BSReplayGain.csproj", "{64BE47B0-9C08-4EB9-8A9D-FFAD1BEBA43F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioNormalizer", "AudioNormalizer\AudioNormalizer.csproj", "{64BE47B0-9C08-4EB9-8A9D-FFAD1BEBA43F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

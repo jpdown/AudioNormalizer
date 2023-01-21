@@ -3,19 +3,19 @@ using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.MenuButtons;
 using Zenject;
 
-namespace BSReplayGain.Managers
+namespace AudioNormalizer.Managers
 {
     internal class MenuButtonManager : IInitializable, IDisposable
     {
-        private readonly BSReplayGainFlowCoordinator _flowCoordinator;
+        private readonly MenuFlowCoordinator _menuFlowCoordinator;
         private readonly MainFlowCoordinator _mainFlowCoordinator;
         private readonly MenuButton _menuButton;
 
-        public MenuButtonManager(MainFlowCoordinator mainFlowCoordinator, BSReplayGainFlowCoordinator flowCoordinator)
+        public MenuButtonManager(MainFlowCoordinator mainFlowCoordinator, MenuFlowCoordinator menuFlowCoordinator)
         {
             _mainFlowCoordinator = mainFlowCoordinator;
-            _flowCoordinator = flowCoordinator;
-            _menuButton = new MenuButton("BSReplayGain", ShowFlowCoordinator);
+            _menuFlowCoordinator = menuFlowCoordinator;
+            _menuButton = new MenuButton("AudioNormalizer", ShowFlowCoordinator);
         }
 
         public void Dispose()
@@ -30,7 +30,7 @@ namespace BSReplayGain.Managers
 
         private void ShowFlowCoordinator()
         {
-            _mainFlowCoordinator.PresentFlowCoordinator(_flowCoordinator);
+            _mainFlowCoordinator.PresentFlowCoordinator(_menuFlowCoordinator);
         }
     }
 }

@@ -2,7 +2,7 @@
 using IPA.Config.Stores;
 
 [assembly: InternalsVisibleTo(GeneratedStore.AssemblyVisibilityTarget)]
-namespace BSReplayGain
+namespace AudioNormalizer
 {
     internal class Config
     {

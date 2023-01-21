@@ -1,11 +1,11 @@
 ﻿using BeatSaberMarkupLanguage;
-using BSReplayGain.UI;
+using AudioNormalizer.UI;
 using HMUI;
 using Zenject;
 
-namespace BSReplayGain
+namespace AudioNormalizer
 {
-    internal class BSReplayGainFlowCoordinator : FlowCoordinator
+    internal class MenuFlowCoordinator : HMUI.FlowCoordinator
     {
         private MainFlowCoordinator _mainFlowCoordinator = null!;
         private MenuButtonView _menuButtonView = null!;
@@ -21,7 +21,7 @@ namespace BSReplayGain
         {
             if (firstActivation)
             {
-                SetTitle("BSReplayGain");
+                SetTitle("AudioNormalizer");
                 showBackButton = true;
 
                 ProvideInitialViewControllers(_menuButtonView);

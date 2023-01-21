@@ -2,18 +2,17 @@
     <PropertyGroup>
         <ProductVersion>8.0.30703</ProductVersion>
         <ProjectGuid>{3F2B2729-99E5-4285-AAB2-C65A09501D83}</ProjectGuid>
-        <RootNamespace>BSReplayGain</RootNamespace>
-        <AssemblyName>BSReplayGain</AssemblyName>
         <TargetFramework>net472</TargetFramework>
         <DebugSymbols>true</DebugSymbols>
         <LocalRefsDir Condition="Exists('..\Refs')">..\Refs</LocalRefsDir>
         <BeatSaberDir>$(LocalRefsDir)</BeatSaberDir>
         <AppOutputBase>$(MSBuildProjectDirectory)\</AppOutputBase>
-        <AssemblyTitle>BSReplayGain</AssemblyTitle>
-        <Product>BSReplayGain</Product>
+        <AssemblyTitle>AudioNormalizer</AssemblyTitle>
+        <Product>AudioNormalizer</Product>
         <Copyright>Copyright © $ModAuthor$</Copyright>
         <LangVersion>8</LangVersion>
         <Nullable>enable</Nullable>
+        <PackageId>AudioNormalizer</PackageId>
     </PropertyGroup>
     <PropertyGroup Condition="$(DefineConstants.Contains('CIBuild')) OR '$(NCrunch)' == '1'">
         <DisableCopyToPlugins>True</DisableCopyToPlugins>

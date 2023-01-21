@@ -4,11 +4,11 @@ using System.Text;
 using IPA.Utilities;
 using Newtonsoft.Json;
 
-namespace BSReplayGain.Models
+namespace AudioNormalizer.Models
 {
     public class ScansModel
     {
-        private static readonly string ScanResultsDir = Path.Combine(UnityGame.UserDataPath, nameof(BSReplayGain));
+        private static readonly string ScanResultsDir = Path.Combine(UnityGame.UserDataPath, nameof(AudioNormalizer));
         private static readonly string ScanResultsPath = Path.Combine(ScanResultsDir, "scans.json");
 
         private const int CurrVersion = 2;

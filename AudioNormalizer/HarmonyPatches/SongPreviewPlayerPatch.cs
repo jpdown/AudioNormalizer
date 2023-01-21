@@ -2,7 +2,7 @@ using System;
 using SiraUtil.Affinity;
 using UnityEngine;
 
-namespace BSReplayGain.HarmonyPatches
+namespace AudioNormalizer.HarmonyPatches
 {
     public class SongPreviewPlayerPatch : IAffinity
     {

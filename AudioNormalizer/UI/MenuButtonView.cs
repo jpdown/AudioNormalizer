@@ -1,16 +1,16 @@
 ﻿using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
-using BSReplayGain.Managers;
+using AudioNormalizer.Managers;
 using SongCore;
 using Zenject;
 
-namespace BSReplayGain.UI
+namespace AudioNormalizer.UI
 {
     [HotReload(RelativePathToLayout = @"./MenuButtonView.bsml")]
-    [ViewDefinition("BSReplayGain.UI.MenuButtonView.bsml")]
+    [ViewDefinition("AudioNormalizer.UI.MenuButtonView.bsml")]
     internal class MenuButtonView : BSMLAutomaticViewController
     {
-        private ReplayGainManager _replayGainManager = null!;
+        private ScannerManager _scannerManager = null!;
         private Config _config = null!;
 
         private string _scanStatus = "";
@@ -46,10 +46,10 @@ namespace BSReplayGain.UI
         }
 
         [Inject]
-        public void Construct(ReplayGainManager replayGainManager, Config config)
+        public void Construct(ScannerManager scannerManager, Config config)
         {
-            _replayGainManager = replayGainManager;
-            _replayGainManager.ScanFinished += _updateScanStatus;
+            _scannerManager = scannerManager;
+            _scannerManager.ScanFinished += _updateScanStatus;
             _config = config;
         }
 
@@ -57,20 +57,20 @@ namespace BSReplayGain.UI
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
             ScanStatus =
-                $"Songs Scanned: {_replayGainManager.NumScannedSongs()} / {Loader.CustomLevels.Count}";
+                $"Songs Scanned: {_scannerManager.NumScannedSongs()} / {Loader.CustomLevels.Count}";
             NotifyPropertyChanged();
         }
 
         [UIAction("yep-sure")]
         private void ScanAllClicked()
         {
-            _replayGainManager.ScanAllSongs();
+            _scannerManager.ScanAllSongs();
         }
 
         private void _updateScanStatus(int newScanned)
         {
             ScanStatus =
-                $"Songs Scanned: {_replayGainManager.NumScannedSongs()} / {Loader.CustomLevels.Count}";
+                $"Songs Scanned: {_scannerManager.NumScannedSongs()} / {Loader.CustomLevels.Count}";
             NotifyPropertyChanged();
         }
     }

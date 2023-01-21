@@ -1,11 +1,11 @@
 ﻿{
   "$schema": "https://raw.githubusercontent.com/bsmg/BSIPA-MetadataFileSchema/master/Schema.json",
-  "id": "BSReplayGain",
-  "name": "BSReplayGain",
+  "id": "AudioNormalizer",
+  "name": "AudioNormalizer",
   "author": "jpdown",
   "version": "0.0.1",
-  "description": "Adds ReplayGain support to custom levels",
-  "gameVersion": "1.21.0",
+  "description": "Adds volume normalization to custom songs",
+  "gameVersion": "1.27.0",
   "dependsOn": {
     "BSIPA": "^4.2.0",
     "SiraUtil": "^3.0.0",

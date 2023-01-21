@@ -91,7 +91,7 @@ namespace AudioNormalizer.Managers
                     // We need to adjust gain so that gained peak is at threshold
                     var adjustment = gainedPeak - ClipThreshold;
                     loudness += adjustment;
-                    _log.Debug($"Adjusting loudness by {adjustment}");
+                    _log.Debug($"Adjusting loudness by {adjustment} to prevent clipping");
                 }
             } 
             

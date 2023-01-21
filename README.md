@@ -1,4 +1,4 @@
-# Beat Saber ReplayGain
+# AudioNormalizer
 
 A Beat Saber mod that adds volume normalization to custom levels.
 
@@ -12,7 +12,7 @@ All dependencies can be installed from ModAssistant/BeatMods
 
 ## Installation
 
-* Download the latest version of the mod [here](https://github.com/jpdown/BSReplayGain/releases). The latest dev build can be downloaded from [actions](https://github.com/jpdown/BSReplayGain/actions).
+* Download the latest version of the mod [here](https://github.com/jpdown/AudioNormalizer/releases). The latest dev build can be downloaded from [actions](https://github.com/jpdown/AudioNormalizer/actions).
 * Place the dll in your Plugins folder
 
 ## Details

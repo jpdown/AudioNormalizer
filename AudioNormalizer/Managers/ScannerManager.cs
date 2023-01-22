@@ -25,6 +25,11 @@ namespace AudioNormalizer.Managers
         private ScansModel _results = null!; // This will be initialized in Initialize
         private bool _scanningAll;
         private List<CustomPreviewBeatmapLevel>? _unscannedLevels;
+        
+        // Protected, so cannot grab with zenject
+        private static readonly FieldInfo TargetLoudnessField =
+            typeof(PerceivedLoudnessPerLevelModel).GetField("kPerceivedLoudnessTarget",
+                BindingFlags.Static | BindingFlags.NonPublic) ?? throw new InvalidOperationException();
 
         private const float ClipThreshold = -1f; // Give 1 dB of headroom
         private readonly float _targetLoudness;
@@ -40,9 +45,7 @@ namespace AudioNormalizer.Managers
             _maxTasks = Environment.ProcessorCount;
 
             // Gets the perceived loudness const from base game
-            _targetLoudness = (float) (typeof(PerceivedLoudnessPerLevelModel)
-                .GetField("kPerceivedLoudnessTarget", BindingFlags.Static | BindingFlags.NonPublic)
-                ?.GetValue(null) ?? throw new MissingFieldException());
+            _targetLoudness = (float) TargetLoudnessField.GetValue(null);
 
             // Gets the global offset applied to all music volume, effectively our preamp
             _preamp = audioManager.GetField<float, AudioManagerSO>("_musicVolumeOffset");
@@ -81,6 +84,8 @@ namespace AudioNormalizer.Managers
             if (!success) return null;
 
             var loudness = scan.Loudness;
+            
+            _log.Debug($"target {_targetLoudness} preamp {_preamp}");
 
             if (_config.ClipPrevention)
             {

@@ -6,6 +6,7 @@ on:
       - 'AudioNormalizer.sln'
       - 'AudioNormalizer/**'
       - '.github/workflows/main.yml'
+  workflow_dispatch:
 jobs:
   Build:
     runs-on: ubuntu-latest
